@@ -1,58 +1,84 @@
 import csv
-from parsel import Selector
+from dataclasses import dataclass
+import requests, time, random
+from bs4 import BeautifulSoup
 from selenium import webdriver
-from selenium.webdriver.common.keys import Keys
 
-USERNAME = input("Please enter your Linkedin email: ")
-PASSWORD = input("Please enter your password: ")
+@dataclass
+class User:
+  stage: str
+  firstname: str
+  lastname: str
+  company: str
+  position: str
+  resume: str
+  location: str
+  status: str
 
-writer = csv.writer(open('testing.csv', 'w')) # preparing csv file to store parsing result later
-writer.writerow(['name', 'job_title', 'schools', 'location', 'ln_url'])
+d = webdriver.Firefox()
+d.get('https://www.linkedin.com')
+conf = open('config.txt')
+l = conf.readlines()
+USERNAME = l[0]
+PASSWORD = l[1]
+QUERY = l[2]
 
-driver = webdriver.Firefox()
+# writer = csv.writer(open('testing.csv', 'w')) # preparing csv file to store parsing result later
+# writer.writerow(['name', 'job_title', 'schools', 'location', 'ln_url'])
 
-driver.get('https://www.linkedin.com/')
+d.find_element_by_xpath('//a[text()="Sign in"]').click()
 
-driver.find_element_by_xpath('//a[text()="Sign in"]').click()
-
-username_input = driver.find_element_by_name('session_key')
+username_input = d.find_element_by_name('session_key')
 username_input.send_keys(USERNAME)
 
-password_input = driver.find_element_by_name('session_password')
+password_input = d.find_element_by_name('session_password')
 password_input.send_keys(PASSWORD)
 
 # click on the sign in button
 # we're finding Sign in text button as it seems this element is seldom to be changed
-driver.find_element_by_xpath('//button[text()="Sign in"]').click()
+d.find_element_by_xpath('//button[text()="Sign in"]').click()
 
 try:
-  driver.find_element_by_xpath('//button[text()="Skip"]').click()
+  d.find_element_by_xpath('//button[text()="Skip"]').click()
+  print("Logged in")
 except:
-  print("WARNING: No skip procedure") 
+  print("Continuing with procedure, successfully logged in") 
 
-driver.get(input("Please enter a link of a Linkedin user to add to this file"))
+d.get(QUERY)
 
-try:
-    sel = Selector(text=driver.page_source)
-    name = sel.xpath('//title/text()').extract_first().split(')')[1].split('|')[0].strip().split(' ')
-    first_name = name[0]
-    last_name = name[1]
-    job_title = sel.xpath('//div[1]/h2/text()').extract_first().strip()
-    company = sel.xpath('//p[2]/text()').extract_first().strip()
+SCROLL_PAUSE_TIME = 5
 
-    schools = ', '.join(sel.xpath('//*[contains(@class, "pv-entity__school-name")]/text()').extract())
-    location = sel.xpath('//*[@class="t-16 t-black t-normal inline-block"]/text()').extract_first().strip()
-    ln_url = driver.current_url
-except:
-    print('Failed to find user.')
+# Get scroll height
+last_height = d.execute_script("return document.body.scrollHeight")
 
-print('\n')
-print(first_name)
-print(last_name)
-print(company)
-print(schools)
-print(location)
-print(ln_url)
-print('\n')
+for i in range(3):
+  # Scroll down to bottom
+  d.execute_script("window.scrollTo(0, document.body.scrollHeight);")
 
-writer.writerow([name, job_title, schools, location, ln_url])
+  # Wait to load page
+  time.sleep(SCROLL_PAUSE_TIME)
+
+  # Calculate new scroll height and compare with last scroll height
+  new_height = d.execute_script("return document.body.scrollHeight")
+  if new_height == last_height:
+      break
+  last_height = new_height
+
+src = d.page_source
+soup = BeautifulSoup(src, 'lxml')
+
+# for testing purposes
+with open("out.html", "w") as file:
+    file.write(soup.prettify())
+
+name_div = soup.find('div', {'class': 'flex-1 mr5'})
+
+name_loc = name_div.find_all('ul')
+name = name_loc[0].find('li').get_text().strip().split(' ')
+firstname = name[0]
+lastname = name[1]
+
+print("First name: " + firstname)
+print("Last name: " + lastname)
+
+# writer.writerow([name, job_title, schools, location, ln_url])
