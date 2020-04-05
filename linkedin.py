@@ -77,8 +77,29 @@ name_loc = name_div.find_all('ul')
 name = name_loc[0].find('li').get_text().strip().split(' ')
 firstname = name[0]
 lastname = name[1]
+loc = name_loc[1].find('li').get_text().strip()
+profile_title = name_div.find('h2').get_text().strip()
+
+
+exp_section = soup.find('section', {'id': 'experience-section'})
+exp_section = exp_section.find('ul')
+li_tags = exp_section.find('div')
+a_tags = li_tags.find('a')
+
+# handling of alternate version of experience display
+if (len(a_tags.find_all('p')) < 2):
+  # special case
+  company_name = exp_section.find_all('h3')[0].find_all('span')[1].get_text().strip()
+  job_title = exp_section.find_all('h3')[1].find_all('span')[1].get_text().strip()
+
+else:
+  job_title = a_tags.find('h3').get_text().strip()
+  company_name = a_tags.find_all('p')[1].get_text().strip()
 
 print("First name: " + firstname)
 print("Last name: " + lastname)
+print("Location: " + loc)
+print("Position: " + job_title)
+print("Company Name: " + company_name)
 
 # writer.writerow([name, job_title, schools, location, ln_url])
