@@ -22,6 +22,7 @@ l = conf.readlines()
 USERNAME = l[0]
 PASSWORD = l[1]
 QUERY = l[2]
+FILENAME = l[3]
 
 # writer = csv.writer(open('testing.csv', 'w')) # preparing csv file to store parsing result later
 # writer.writerow(['name', 'job_title', 'schools', 'location', 'ln_url'])
@@ -101,5 +102,16 @@ print("Last name: " + lastname)
 print("Location: " + loc)
 print("Position: " + job_title)
 print("Company Name: " + company_name)
+
+filename = FILENAME + ".csv"
+
+row = ['primary', firstname, lastname, company_name, job_title, 'resume', loc, 'status'] 
+
+fields = ['stage', 'first_name', 'last_name', 'company', 'position', 'resume', 'location', 'status'] 
+
+with open(filename, 'w') as csvfile:  
+    csvwriter = csv.writer(csvfile)   
+    csvwriter.writerow(fields)
+    csvwriter.writerow(row) 
 
 # writer.writerow([name, job_title, schools, location, ln_url])
