@@ -8,20 +8,21 @@ d = webdriver.Firefox()
 
 conf = open('config.txt')
 lines = conf.readlines()
-# USERNAME = lines[0]
-# PASSWORD = lines[1]
-# QUERY = lines[2]
-# FILENAME = lines[3]
+USERNAME = lines[0]
+PASSWORD = lines[1]
+QUERY = lines[2]
+FILENAME = lines[3]
 
-def get_page_data(USERNAME, PASSWORD, QUERY, FILENAME):
+
+def log_in(username, password):
     d.get('https://www.linkedin.com')
     d.find_element_by_xpath('//a[text()="Sign in"]').click()
 
     username_input = d.find_element_by_name('session_key')
-    username_input.send_keys(USERNAME)
+    username_input.send_keys(username)
 
     password_input = d.find_element_by_name('session_password')
-    password_input.send_keys(PASSWORD)
+    password_input.send_keys(password)
 
     # click on the sign in button
     # we're finding Sign in text button as it seems this element is seldom to be changed
@@ -33,7 +34,9 @@ def get_page_data(USERNAME, PASSWORD, QUERY, FILENAME):
     except:
         print("Continuing with procedure, successfully logged in")
 
-    d.get(QUERY)
+
+def get_page_data(query, filename):
+    d.get(query)
 
     SCROLL_PAUSE_TIME = 5
 
@@ -90,7 +93,7 @@ def get_page_data(USERNAME, PASSWORD, QUERY, FILENAME):
     print("Position: " + job_title)
     print("Company Name: " + company_name)
 
-    path = FILENAME + ".csv"
+    path = filename + ".csv"
 
     row = ['primary', first_name, last_name, company_name, job_title, 'resume', loc, 'status']
 
